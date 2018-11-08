@@ -87,10 +87,10 @@ function main() {
     buffer = gl.createBuffer();
 
     canvas.onclick = function (e) {
-        var x = e.offsetX / 400 - 1;
-        var y = - (e.offsetY / 400 - 1);
+        var x = e.offsetX / (width/2) - 1;
+        var y = - (e.offsetY / (width/2) - 1);
         gl.vertexAttrib4f(attribPos, x, y, 0.0, 1.0);
-        gl.vertexAttrib1f(attribSize, pointSize);
+        gl.vertexAttrib1f(attribSize, Math.random() * 50);
         gl.uniform4f(uniformColor, Math.random(), Math.random(), Math.random(), 1.0);
         draw();
     }
