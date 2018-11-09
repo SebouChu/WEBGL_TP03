@@ -99,7 +99,7 @@ function initAttributes() {
     gl.bufferData(gl.ARRAY_BUFFER, 4*MAX_POINTS, gl.STREAM_DRAW);
     gl.vertexAttribPointer(attribSize, 1, gl.FLOAT, true, 0, 0);
     gl.enableVertexAttribArray(attribSize);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(pointsSize));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 4, new Float32Array(pointsSize));
     buffers["size"] = sizeBuffer;
 
     var colorBuffer = gl.createBuffer();
@@ -107,7 +107,7 @@ function initAttributes() {
     gl.bufferData(gl.ARRAY_BUFFER, 4*3*MAX_POINTS, gl.STREAM_DRAW);
     gl.vertexAttribPointer(attribColor, 3, gl.FLOAT, true, 0, 0);
     gl.enableVertexAttribArray(attribColor);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(pointsColors));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 12, new Float32Array(pointsColors));
     buffers["color"] = colorBuffer;
 
     var posBuffer = gl.createBuffer();
@@ -115,7 +115,7 @@ function initAttributes() {
     gl.bufferData(gl.ARRAY_BUFFER, 4*2*MAX_POINTS, gl.STREAM_DRAW);
     gl.vertexAttribPointer(attribPos, 2, gl.FLOAT, true, 0, 0);
     gl.enableVertexAttribArray(attribPos);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(pointsCoords));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 8, new Float32Array(pointsCoords));
     buffers["pos"] = posBuffer;
 }
 
@@ -128,7 +128,7 @@ function checkAvailability() {
 //Fonction permettant le dessin dans le canvas
 function draw() {
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.POINTS, 0, pointsSize.length);
+    gl.drawArrays(gl.POINTS, 0, pointsSize.length + 1);
 }
 
 
@@ -144,17 +144,17 @@ function main() {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers["size"]);
         var newSize = [Math.random() * 50];
-        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsSize.length, new Float32Array(newSize));
+        gl.bufferSubData(gl.ARRAY_BUFFER, 4*(pointsSize.length + 1), new Float32Array(newSize));
         pointsSize.push(...newSize);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers["color"]);
         var newColor = [Math.random(), Math.random(), Math.random()];
-        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsColors.length, new Float32Array(newColor));
+        gl.bufferSubData(gl.ARRAY_BUFFER, 4*(pointsColors.length + 3), new Float32Array(newColor));
         pointsColors.push(...newColor);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers["pos"]);
         var newPos = [x, y];
-        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsCoords.length, new Float32Array(newPos));
+        gl.bufferSubData(gl.ARRAY_BUFFER, 4*(pointsCoords.length + 2), new Float32Array(newPos));
         pointsCoords.push(...newPos);
 
         draw();
@@ -167,18 +167,15 @@ function main() {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers["size"]);
         var newSize = [Math.random() * 50];
-        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsSize.length, new Float32Array(newSize));
-        pointsSize.push(...newSize);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(newSize));
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers["color"]);
         var newColor = [Math.random(), Math.random(), Math.random()];
-        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsColors.length, new Float32Array(newColor));
-        pointsColors.push(...newColor);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(newColor));
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers["pos"]);
         var newPos = [x, y];
-        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsCoords.length, new Float32Array(newPos));
-        pointsCoords.push(...newPos);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(newPos));
 
         draw();
     }
