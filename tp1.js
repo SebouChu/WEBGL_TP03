@@ -15,12 +15,17 @@ var canvas;
 var width, height;
 var gl; //contexte
 var program; //shader program
-var buffer;
+var buffers = {};
 var attribPos; //attribute position
 var attribSize; //attribute size
 var uniformColor; //uniform color
 var pointSize = 20;
 var pointColor = [1.0, 1.0, 0.0];
+var pointsCoords = [];
+var pointsSize = [];
+var pointsColors = [];
+
+var MAX_POINTS = 2000;
 // const pi = Math.PI
 // var trigoData = [
 //     pi/6, pi/4, pi/3,
@@ -33,6 +38,7 @@ function initContext() {
     canvas = document.getElementById('dawin-webgl');
     width = canvas.clientWidth;
     height = canvas.clientHeight;
+    // gl = canvas.getContext('webgl');
     gl = canvas.getContext('webgl', {preserveDrawingBuffer: true});
     if (!gl) {
         console.log('ERREUR : echec chargement du contexte');
@@ -47,6 +53,7 @@ function initShaders() {
     var vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderSource);
     gl.compileShader(vertexShader);
+    console.log(gl.getShaderInfoLog(vertexShader));
 
     var fragmentShaderSource = loadText("fragmentShader.glsl");
     var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -63,19 +70,65 @@ function initShaders() {
 
     gl.linkProgram(program);
     console.log("Program Link Status: " + gl.getProgramParameter(program, gl.LINK_STATUS));
+    console.log(gl.getProgramInfoLog(program));
     gl.useProgram(program);
+}
+
+function initGrid() {
+    pointsCoords = [];
+    pointsSize = [];
+    pointsColors = [];
+    for (var i = -0.8; i <= 0.8 ; i += 0.2) {
+        for (var j = -0.8; j <= 0.8 ; j += 0.2) {
+            pointsCoords.push(...[parseFloat(i.toFixed(2)),parseFloat(j.toFixed(2))])
+            pointsSize.push((i+1) * pointSize + 5)
+            pointsColors.push(...[((i >= 0) ? Math.abs(i) + 0.5 : 0.0), .3, ((i <= 0) ? Math.abs(i) + 0.5 : 0.0)])
+        }
+    }
 }
 
 //Fonction initialisant les attributs pour l'affichage (position et taille)
 function initAttributes() {
     attribPos = gl.getAttribLocation(program, "position");
     attribSize = gl.getAttribLocation(program, "size");
-    uniformColor = gl.getUniformLocation(program, "fragColor");
+    attribColor = gl.getAttribLocation(program, "color");
+    initGrid();
+
+    var sizeBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, sizeBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, 4*MAX_POINTS, gl.STREAM_DRAW);
+    gl.vertexAttribPointer(attribSize, 1, gl.FLOAT, true, 0, 0);
+    gl.enableVertexAttribArray(attribSize);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(pointsSize));
+    buffers["size"] = sizeBuffer;
+
+    var colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, 4*3*MAX_POINTS, gl.STREAM_DRAW);
+    gl.vertexAttribPointer(attribColor, 3, gl.FLOAT, true, 0, 0);
+    gl.enableVertexAttribArray(attribColor);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(pointsColors));
+    buffers["color"] = colorBuffer;
+
+    var posBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, 4*2*MAX_POINTS, gl.STREAM_DRAW);
+    gl.vertexAttribPointer(attribPos, 2, gl.FLOAT, true, 0, 0);
+    gl.enableVertexAttribArray(attribPos);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(pointsCoords));
+    buffers["pos"] = posBuffer;
+}
+
+function checkAvailability() {
+    if (pointsSize.length >= MAX_POINTS) {
+        initGrid();
+    }
 }
 
 //Fonction permettant le dessin dans le canvas
 function draw() {
-    gl.drawArrays(gl.POINTS, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.POINTS, 0, pointsSize.length);
 }
 
 
@@ -83,15 +136,50 @@ function main() {
     initContext();
     initShaders();
     initAttributes();
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    buffer = gl.createBuffer();
 
     canvas.onclick = function (e) {
+        checkAvailability();
         var x = e.offsetX / (width/2) - 1;
         var y = - (e.offsetY / (width/2) - 1);
-        gl.vertexAttrib4f(attribPos, x, y, 0.0, 1.0);
-        gl.vertexAttrib1f(attribSize, Math.random() * 50);
-        gl.uniform4f(uniformColor, Math.random(), Math.random(), Math.random(), 1.0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers["size"]);
+        var newSize = [Math.random() * 50];
+        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsSize.length, new Float32Array(newSize));
+        pointsSize.push(...newSize);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers["color"]);
+        var newColor = [Math.random(), Math.random(), Math.random()];
+        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsColors.length, new Float32Array(newColor));
+        pointsColors.push(...newColor);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers["pos"]);
+        var newPos = [x, y];
+        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsCoords.length, new Float32Array(newPos));
+        pointsCoords.push(...newPos);
+
+        draw();
+    }
+
+    canvas.onmousemove = function (e) {
+        checkAvailability();
+        var x = e.offsetX / (width/2) - 1;
+        var y = - (e.offsetY / (width/2) - 1);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers["size"]);
+        var newSize = [Math.random() * 50];
+        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsSize.length, new Float32Array(newSize));
+        pointsSize.push(...newSize);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers["color"]);
+        var newColor = [Math.random(), Math.random(), Math.random()];
+        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsColors.length, new Float32Array(newColor));
+        pointsColors.push(...newColor);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers["pos"]);
+        var newPos = [x, y];
+        gl.bufferSubData(gl.ARRAY_BUFFER, 4*pointsCoords.length, new Float32Array(newPos));
+        pointsCoords.push(...newPos);
+
         draw();
     }
 
@@ -102,12 +190,5 @@ function main() {
     //     draw();
     // })
 
-    for (var i = -0.8; i <= 0.8 ; i += 0.2) {
-        for (var j = -0.8; j <= 0.8 ; j += 0.2) {
-            gl.vertexAttrib4f(attribPos, i, j, 0.0, 1.0);
-            gl.vertexAttrib1f(attribSize, (i+1) * pointSize + 5);
-            gl.uniform4f(uniformColor, ((i >= 0) ? Math.abs(i) + 0.5 : 0.0), .3, ((i <= 0) ? i + 0.5 : 0.0), 1.0);
-            draw();
-        }
-    }
+    draw();
 }
