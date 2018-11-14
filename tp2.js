@@ -73,6 +73,7 @@ function initEvents() {
         var y = ((canvas.height-e.pageY)/canvas.height)*2.0 - 1.0;
         mousePositions.push(x);
         mousePositions.push(y);
+        refreshBuffers();
         draw();
     }
 }
@@ -80,27 +81,31 @@ function initEvents() {
 //TODO
 //Fonction initialisant les attributs pour l'affichage (position et taille)
 function initAttributes() {
-    
+    attribPos = gl.getAttribLocation(program, "position");
 }
 
 
 //TODO
 //Initialisation des buffers
 function initBuffers() {
-    
+    buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, 8, gl.STATIC_DRAW);
+    gl.vertexAttribPointer(attribPos, 2, gl.FLOAT, true, 0, 0);
+    gl.enableVertexAttribArray(attribPos);
 }
 
 //TODO
 //Mise a jour des buffers : necessaire car les coordonnees des points sont ajoutees a chaque clic
 function refreshBuffers() {
-   
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mousePositions), gl.STATIC_DRAW);
 }
 
 //TODO
 //Fonction permettant le dessin dans le canvas
 function draw() {
     gl.clear(gl.COLOR_BUFFER_BIT);
-    
+    gl.drawArrays(gl.TRIANGLES, 0, mousePositions.length / 2);
 }
 
 
