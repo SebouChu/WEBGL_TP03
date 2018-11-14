@@ -16,10 +16,16 @@ var gl; //contexte
 var program; //shader program
 var attribPos; //attribute position
 var attribColor; //attribute color
+var uniformTranslation; //translation
+var uniformHomothety; //translation
+var uniformRotation; //translation
 var pointSize = 10.;
 var mousePositions = [];
 var vertexColors = [];
 var buffers = [];
+var translationValues = {x: 0.0, y: 0.0};
+var homothetyFactor = 1.0;
+var rotationAngle = 0.0;
 var selectedPrimitive;
 
 function initContext() {
@@ -74,6 +80,40 @@ function initEvents() {
         refreshBuffers();
         draw();
     }
+
+    window.addEventListener('keydown', function(e) {
+        switch (e.key) {
+            case "ArrowUp":
+                translationValues.y += 0.01;
+                break;
+            case "ArrowDown":
+                translationValues.y -= 0.01;
+                break;
+            case "ArrowLeft":
+                translationValues.x -= 0.01;
+                break;
+            case "ArrowRight":
+                translationValues.x += 0.01;
+                break;
+            case "+":
+                homothetyFactor += 0.05;
+                break;
+            case "-":
+                homothetyFactor -= 0.05;
+                break;
+            case "a":
+                rotationAngle -= Math.PI/12;
+                break;
+            case "e":
+                rotationAngle += Math.PI/12;
+                break;
+            default:
+                // console.log(e.key);
+                return;
+        };
+
+        draw();
+    });
 }
 
 //TODO
@@ -81,6 +121,9 @@ function initEvents() {
 function initAttributes() {
     attribPos = gl.getAttribLocation(program, "position");
     attribColor = gl.getAttribLocation(program, "aVertexColor");
+    uniformTranslation = gl.getUniformLocation(program, "translation");
+    uniformHomothety = gl.getUniformLocation(program, "homothety");
+    uniformRotation = gl.getUniformLocation(program, "rotation");
 }
 
 
@@ -118,6 +161,10 @@ function draw() {
     if (selectedPrimitive == undefined) {
         selectedPrimitive = gl.TRIANGLES;
     }
+
+    gl.uniform2f(uniformTranslation, translationValues.x, translationValues.y);
+    gl.uniform1f(uniformHomothety, homothetyFactor);
+    gl.uniformMatrix2fv(uniformRotation, false, [Math.cos(rotationAngle), -Math.sin(rotationAngle), Math.sin(rotationAngle), Math.cos(rotationAngle)]);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
 }
@@ -133,9 +180,9 @@ function addRandomColors(n) {
 }
 
 function drawTriangle() {
-    mousePositions.push(...[-0.75, 0.75]);
-    mousePositions.push(...[0, -0.75]);
-    mousePositions.push(...[0.75, 0.75]);
+    mousePositions.push(...[-0.433, 0.433]);
+    mousePositions.push(...[0, -0.433]);
+    mousePositions.push(...[0.433, 0.433]);
 
     addRandomColors(3);
 
