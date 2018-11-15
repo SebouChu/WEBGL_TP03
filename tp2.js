@@ -195,19 +195,25 @@ function autoDraw() {
     }
 
     if (time < 225) {
-        rotationAngle += Math.PI/24;
+        rotationAngle += Math.PI/48;
     } else if (time < 450) {
-        rotationAngle += Math.PI/12;
+        rotationAngle += Math.PI/24;
     } else if (time < 675) {
-        rotationAngle -= Math.PI/6;
+        rotationAngle -= Math.PI/12;
     } else if (time < 900) {
-        rotationAngle += Math.PI/2;
+        rotationAngle += Math.PI/6;
     }
 
     if (time < 450) {
         scaleFactor -= 0.001;
     } else if (time < 900) {
         scaleFactor += 0.001;
+    }
+
+    if (time < 900) {
+        vertexColors = [];
+        addRandomColors(3);
+        refreshBuffers();
     }
 
     let transformMat = generateTransformMatrix();
