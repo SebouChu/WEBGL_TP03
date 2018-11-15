@@ -327,13 +327,13 @@ function main() {
     initShaders();
     initAttributes();
     initBuffers();
-    // initEvents();
+    initEvents();
 
     setTriangle();
     // setTriangrid();
     // setTriansquare();
 
-    // draw();
+    draw();
     // autoDraw();
-    crazyAutoDraw();
+    // crazyAutoDraw();
 }
