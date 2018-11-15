@@ -14,18 +14,21 @@ function loadText(url) {
 var canvas;
 var gl; //contexte
 var program; //shader program
+var buffers = [];
+
 var attribPos; //attribute position
 var attribColor; //attribute color
 var uniformTranslation; //translation
 var uniformHomothety; //translation
 var uniformRotation; //translation
-var pointSize = 10.;
+
 var mousePositions = [];
 var vertexColors = [];
-var buffers = [];
+
 var translationValues = {x: 0.0, y: 0.0};
 var homothetyFactor = 1.0;
 var rotationAngle = 0.0;
+
 var selectedPrimitive;
 
 function initContext() {
@@ -43,25 +46,30 @@ function initShaders() {
     var vertexShaderSource = loadText("vertex.glsl");
     var vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderSource);
+
     gl.compileShader(vertexShader);
-    console.log(gl.getShaderInfoLog(vertexShader));
+    if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        console.log(gl.getShaderInfoLog(vertexShader));
+    }
 
     var fragmentShaderSource = loadText("fragment.glsl");
     var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragmentShader, fragmentShaderSource);
-    gl.compileShader(fragmentShader);
-    console.log(gl.getShaderInfoLog(fragmentShader));
 
-    console.log("Vertex Shader Compile Status: " + gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS));
-    console.log("Fragment Shader Compile Status: " + gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS));
+    gl.compileShader(fragmentShader);
+    if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        console.log(gl.getShaderInfoLog(fragmentShader));
+    }
 
     program = gl.createProgram();
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
 
     gl.linkProgram(program);
-    console.log("Program Link Status: " + gl.getProgramParameter(program, gl.LINK_STATUS));
-    console.log(gl.getProgramInfoLog(program));
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.log(gl.getProgramInfoLog(program));
+    }
+
     gl.useProgram(program)
 }
 
@@ -70,15 +78,12 @@ function initShaders() {
 //Evenement souris
 function initEvents() {
     canvas.onclick = function(e) {
-        //changement de repere pour les coordonnees de souris
         var x = (e.pageX/canvas.width)*2.0 - 1.0;
         var y = ((canvas.height-e.pageY)/canvas.height)*2.0 - 1.0;
-        mousePositions.push(x);
-        mousePositions.push(y);
+        mousePositions.push(...[x,y]);
         addRandomColors(1);
 
         refreshBuffers();
-        draw();
     }
 
     window.addEventListener('keydown', function(e) {
@@ -102,17 +107,15 @@ function initEvents() {
                 homothetyFactor -= 0.05;
                 break;
             case "a":
-                rotationAngle -= Math.PI/12;
+                rotationAngle -= 0.05;
                 break;
             case "e":
-                rotationAngle += Math.PI/12;
+                rotationAngle += 0.05;
                 break;
             default:
                 // console.log(e.key);
                 return;
         };
-
-        draw();
     });
 }
 
@@ -158,6 +161,8 @@ function refreshBuffers() {
 //TODO
 //Fonction permettant le dessin dans le canvas
 function draw() {
+    requestAnimationFrame(draw);
+
     if (selectedPrimitive == undefined) {
         selectedPrimitive = gl.TRIANGLES;
     }
@@ -165,6 +170,7 @@ function draw() {
     gl.uniform2f(uniformTranslation, translationValues.x, translationValues.y);
     gl.uniform1f(uniformHomothety, homothetyFactor);
     gl.uniformMatrix2fv(uniformRotation, false, [Math.cos(rotationAngle), -Math.sin(rotationAngle), Math.sin(rotationAngle), Math.cos(rotationAngle)]);
+
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
 }
@@ -172,25 +178,26 @@ function draw() {
 function addRandomColors(n) {
     let i;
     for (i = 0; i < n; i += 1) {
-        vertexColors.push(Math.random());
-        vertexColors.push(Math.random());
-        vertexColors.push(Math.random());
-        vertexColors.push(1.0);
+        vertexColors.push(...[
+            Math.random(),
+            Math.random(),
+            Math.random(),
+            1.0
+        ]);
     }
 }
 
-function drawTriangle() {
-    mousePositions.push(...[-0.433, 0.433]);
-    mousePositions.push(...[0, -0.433]);
-    mousePositions.push(...[0.433, 0.433]);
+function setTriangle() {
+    mousePositions.push(...[-0.5, -1/3 * Math.sqrt(3/4)]);
+    mousePositions.push(...[0, 2/3 * Math.sqrt(3/4)]);
+    mousePositions.push(...[0.5, -1/3 * Math.sqrt(3/4)]);
 
     addRandomColors(3);
 
     refreshBuffers();
-    draw();
 }
 
-function drawTriangrid() {
+function setTriangrid() {
     let i, j;
     for (i = 1 ; i > -1 ; i -= 0.2) {
         for (j = -1 ; j < 1 ; j += 0.2) {
@@ -203,10 +210,9 @@ function drawTriangrid() {
     }
 
     refreshBuffers();
-    draw();
 }
 
-function drawTriansquare() {
+function setTriansquare() {
     let i;
 
     selectedPrimitive = gl.TRIANGLE_FAN;
@@ -219,7 +225,6 @@ function drawTriansquare() {
     addRandomColors(4);
 
     refreshBuffers();
-    draw();
 }
 
 
@@ -230,8 +235,9 @@ function main() {
     initBuffers();
     initEvents();
 
-    drawTriangle();
-    // drawTriangrid();
-    // drawTriansquare();
-    // draw();
+    setTriangle();
+    // setTriangrid();
+    // setTriansquare();
+
+    draw();
 }
