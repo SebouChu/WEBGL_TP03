@@ -250,6 +250,7 @@ function crazyAutoDraw() {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
     time += 1;
+    time %= 900;
 }
 
 function generateTransformMatrix() {
@@ -326,13 +327,13 @@ function main() {
     initShaders();
     initAttributes();
     initBuffers();
-    initEvents();
+    // initEvents();
 
     setTriangle();
     // setTriangrid();
     // setTriansquare();
 
     // draw();
-    autoDraw();
-    // crazyAutoDraw();
+    // autoDraw();
+    crazyAutoDraw();
 }
