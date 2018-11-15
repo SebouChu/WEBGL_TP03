@@ -256,7 +256,7 @@ function crazyAutoDraw() {
 function generateTransformMatrix() {
     let result = mat4.create();
     let rotationQuat = quat.create();
-    quat.setAxisAngle(rotationQuat, [0, 0, 1], rotationAngle)
+    quat.setAxisAngle(rotationQuat, [0, 0, 1], -rotationAngle)
 
     let translationVec = vec3.fromValues(translationValues.x, translationValues.y, 0);
     let scaleVec = vec3.fromValues(scaleFactor, scaleFactor, 0);
