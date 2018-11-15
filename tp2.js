@@ -28,7 +28,8 @@ var scaleFactor = 1.0;
 var rotationAngle = 0;
 
 var selectedPrimitive;
-var time = 0;
+var time = 0; // time for autoDraw & crazyAutoDraw
+var direction = "right"; // direction for autoDraw
 
 function initContext() {
     canvas = document.getElementById('dawin-webgl');
@@ -182,6 +183,33 @@ function autoDraw() {
         selectedPrimitive = gl.TRIANGLES;
     }
 
+    if (direction == "left") {
+        translationValues.x -= 0.002;
+    } else {
+        translationValues.x += 0.002;
+    }
+
+    if (translationValues.x > 0.5) {
+        direction = "left";
+    } else if (translationValues.x < -0.5) {
+        direction = "right";
+    }
+
+    let transformMat = generateTransformMatrix();
+    gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
+    time += 1;
+}
+
+function crazyAutoDraw() {
+    requestAnimationFrame(crazyAutoDraw);
+
+    if (selectedPrimitive == undefined) {
+        selectedPrimitive = gl.TRIANGLES;
+    }
+
     if (time < 180) {
         translationValues.x += 0.002;
     } else if (time < 360) {
@@ -306,4 +334,5 @@ function main() {
 
     // draw();
     autoDraw();
+    // crazyAutoDraw();
 }
