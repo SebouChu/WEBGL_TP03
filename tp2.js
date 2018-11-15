@@ -23,9 +23,9 @@ var uniformTransformMat;
 var mousePositions = [];
 var vertexColors = [];
 
-var translationValues = {x: 0.0, y: 0.0};
+var translationValues = {x: 0, y: 0};
 var scaleFactor = 1.0;
-var rotationAngle = 0.0;
+var rotationAngle = 0;
 
 var selectedPrimitive;
 
@@ -76,8 +76,8 @@ function initShaders() {
 //Evenement souris
 function initEvents() {
     canvas.onclick = function(e) {
-        var x = (e.pageX/canvas.width)*2.0 - 1.0;
-        var y = ((canvas.height-e.pageY)/canvas.height)*2.0 - 1.0;
+        var x = e.offsetX / (canvas.width/2) - 1;
+        var y = - (e.offsetY / (canvas.width/2) - 1);
         mousePositions.push(...[x,y]);
         addRandomColors(1);
 
@@ -105,10 +105,12 @@ function initEvents() {
                 scaleFactor -= 0.05;
                 break;
             case "a":
-                rotationAngle -= 0.05;
+                rotationAngle -= Math.PI / 24;
+                rotationAngle %= 2 * Math.PI;
                 break;
             case "e":
-                rotationAngle += 0.05;
+                rotationAngle += Math.PI / 24;
+                rotationAngle %= 2 * Math.PI;
                 break;
             default:
                 // console.log(e.key);
@@ -154,6 +156,8 @@ function refreshBuffers() {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mousePositions), gl.STATIC_DRAW);
 }
 
+var test = false;
+
 //TODO
 //Fonction permettant le dessin dans le canvas
 function draw() {
@@ -163,14 +167,23 @@ function draw() {
         selectedPrimitive = gl.TRIANGLES;
     }
 
-    let rotationMat = mat4.create();
-    mat4.fromRotation(rotationMat, -rotationAngle, vec3.fromValues(0, 0, 1));
+    let rotationQuat = quat.create();
+    quat.setAxisAngle(rotationQuat, [0, 0, 1], rotationAngle)
 
     let translationVec = vec3.fromValues(translationValues.x, translationValues.y, 0);
-    let scaleVec = vec3.fromValues(scaleFactor, scaleFactor, 1);
+    let scaleVec = vec3.fromValues(scaleFactor, scaleFactor, 0);
+    if (!test) {
+        console.log("Rotation")
+        console.log(rotationQuat);
+        console.log("Translation")
+        console.log(translationVec);
+        console.log("Scale")
+        console.log(scaleVec);
+        test = true;
+    }
 
     let transformMat = mat4.create();
-    mat4.fromRotationTranslationScale(transformMat, rotationMat, translationVec, scaleVec);
+    mat4.fromRotationTranslationScale(transformMat, rotationQuat, translationVec, scaleVec);
 
     gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
 
