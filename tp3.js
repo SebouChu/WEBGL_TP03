@@ -19,6 +19,7 @@ var buffers = [];
 var attribPos; //attribute position
 var attribColor; //attribute color
 var uniformTransformMat;
+var uniformPerspectiveMat;
 
 var mousePositions = [];
 var vertexColors = [];
@@ -127,6 +128,7 @@ function initAttributes() {
     attribPos = gl.getAttribLocation(program, "position");
     attribColor = gl.getAttribLocation(program, "aVertexColor");
     uniformTransformMat = gl.getUniformLocation(program, "transformation");
+    uniformPerspectiveMat = gl.getUniformLocation(program, "perspective");
 }
 
 
@@ -146,6 +148,13 @@ function initBuffers() {
     gl.vertexAttribPointer(attribPos, 2, gl.FLOAT, true, 0, 0);
     gl.enableVertexAttribArray(attribPos);
     buffers["pos"] = posBuffer;
+}
+
+function initPerspective() {
+    var perspectiveMat = mat4.create();
+    mat4.perspective(perspectiveMat, Math.PI/2, canvas.width/canvas.height, 0, 1000);
+
+    gl.uniformMatrix4fv(uniformPerspectiveMat, false, perspectiveMat);
 }
 
 //TODO
@@ -326,6 +335,7 @@ function main() {
     initContext();
     initShaders();
     initAttributes();
+    initPerspective();
     initBuffers();
     initEvents();
 
