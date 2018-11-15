@@ -18,15 +18,13 @@ var buffers = [];
 
 var attribPos; //attribute position
 var attribColor; //attribute color
-var uniformTranslation; //translation
-var uniformHomothety; //translation
-var uniformRotation; //translation
+var uniformTransformMat;
 
 var mousePositions = [];
 var vertexColors = [];
 
 var translationValues = {x: 0.0, y: 0.0};
-var homothetyFactor = 1.0;
+var scaleFactor = 1.0;
 var rotationAngle = 0.0;
 
 var selectedPrimitive;
@@ -101,10 +99,10 @@ function initEvents() {
                 translationValues.x += 0.01;
                 break;
             case "+":
-                homothetyFactor += 0.05;
+                scaleFactor += 0.05;
                 break;
             case "-":
-                homothetyFactor -= 0.05;
+                scaleFactor -= 0.05;
                 break;
             case "a":
                 rotationAngle -= 0.05;
@@ -124,9 +122,7 @@ function initEvents() {
 function initAttributes() {
     attribPos = gl.getAttribLocation(program, "position");
     attribColor = gl.getAttribLocation(program, "aVertexColor");
-    uniformTranslation = gl.getUniformLocation(program, "translation");
-    uniformHomothety = gl.getUniformLocation(program, "homothety");
-    uniformRotation = gl.getUniformLocation(program, "rotation");
+    uniformTransformMat = gl.getUniformLocation(program, "transformation");
 }
 
 
@@ -167,9 +163,16 @@ function draw() {
         selectedPrimitive = gl.TRIANGLES;
     }
 
-    gl.uniform2f(uniformTranslation, translationValues.x, translationValues.y);
-    gl.uniform1f(uniformHomothety, homothetyFactor);
-    gl.uniformMatrix2fv(uniformRotation, false, [Math.cos(rotationAngle), -Math.sin(rotationAngle), Math.sin(rotationAngle), Math.cos(rotationAngle)]);
+    let rotationMat = mat4.create();
+    mat4.fromRotation(rotationMat, -rotationAngle, vec3.fromValues(0, 0, 1));
+
+    let translationVec = vec3.fromValues(translationValues.x, translationValues.y, 0);
+    let scaleVec = vec3.fromValues(scaleFactor, scaleFactor, 1);
+
+    let transformMat = mat4.create();
+    mat4.fromRotationTranslationScale(transformMat, rotationMat, translationVec, scaleVec);
+
+    gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
@@ -178,12 +181,7 @@ function draw() {
 function addRandomColors(n) {
     let i;
     for (i = 0; i < n; i += 1) {
-        vertexColors.push(...[
-            Math.random(),
-            Math.random(),
-            Math.random(),
-            1.0
-        ]);
+        vertexColors.push(...[Math.random(), Math.random(), Math.random(), 1.0]);
     }
 }
 
