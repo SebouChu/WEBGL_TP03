@@ -28,6 +28,7 @@ var scaleFactor = 1.0;
 var rotationAngle = 0;
 
 var selectedPrimitive;
+var time = 0;
 
 function initContext() {
     canvas = document.getElementById('dawin-webgl');
@@ -167,6 +168,58 @@ function draw() {
         selectedPrimitive = gl.TRIANGLES;
     }
 
+    let transformMat = generateTransformMatrix();
+    gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
+}
+
+function autoDraw() {
+    requestAnimationFrame(autoDraw);
+
+    if (selectedPrimitive == undefined) {
+        selectedPrimitive = gl.TRIANGLES;
+    }
+
+    if (time < 180) {
+        translationValues.x += 0.002;
+    } else if (time < 360) {
+        translationValues.y += 0.002;
+    } else if (time < 540) {
+        translationValues.x -= 0.004;
+    } else if (time < 720) {
+        translationValues.y -= 0.002;
+    } else if (time < 900) {
+        translationValues.x += 0.002;
+    }
+
+    if (time < 225) {
+        rotationAngle += Math.PI/24;
+    } else if (time < 450) {
+        rotationAngle += Math.PI/12;
+    } else if (time < 675) {
+        rotationAngle -= Math.PI/6;
+    } else if (time < 900) {
+        rotationAngle += Math.PI/2;
+    }
+
+    if (time < 450) {
+        scaleFactor -= 0.001;
+    } else if (time < 900) {
+        scaleFactor += 0.001;
+    }
+
+    let transformMat = generateTransformMatrix();
+    gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
+    time += 1;
+}
+
+function generateTransformMatrix() {
+    let result = mat4.create();
     let rotationQuat = quat.create();
     quat.setAxisAngle(rotationQuat, [0, 0, 1], rotationAngle)
 
@@ -182,13 +235,8 @@ function draw() {
         test = true;
     }
 
-    let transformMat = mat4.create();
-    mat4.fromRotationTranslationScale(transformMat, rotationQuat, translationVec, scaleVec);
-
-    gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
-
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
+    mat4.fromRotationTranslationScale(result, rotationQuat, translationVec, scaleVec);
+    return result;
 }
 
 function addRandomColors(n) {
@@ -250,5 +298,6 @@ function main() {
     // setTriangrid();
     // setTriansquare();
 
-    draw();
+    // draw();
+    autoDraw();
 }
