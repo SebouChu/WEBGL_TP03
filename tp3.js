@@ -20,11 +20,12 @@ var attribPos; //attribute position
 var attribColor; //attribute color
 var uniformTransformMat;
 var uniformPerspectiveMat;
+var uniformModelViewMat;
 
 var mousePositions = [];
 var vertexColors = [];
 
-var translationValues = {x: 0, y: 0, z: 0};
+var translationValues = {x: 0, y: 0, z: -6.0};
 var scaleFactor = 1.0;
 var rotationAngle = 0;
 
@@ -157,8 +158,14 @@ function initBuffers() {
 }
 
 function initPerspective() {
+    const fieldOfView = 45 * Math.PI / 180;
+    const aspect = canvas.width / canvas.height;
+    const zNear = 0.1;
+    const zFar = 100.0;
+
     var perspectiveMat = mat4.create();
-    mat4.perspective(perspectiveMat, 90, canvas.width/canvas.height, 1, 1000);
+    // mat4.perspective(perspectiveMat, 90, canvas.width/canvas.height, 1, 1000);
+    mat4.perspective(perspectiveMat, fieldOfView, aspect, zNear, zFar);
     console.table(perspectiveMat);
 
     gl.uniformMatrix4fv(uniformPerspectiveMat, false, perspectiveMat);
@@ -189,6 +196,9 @@ function draw() {
     gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
 
     gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clearDepth(1.0);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
     gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 3);
 }
 
@@ -273,11 +283,11 @@ function generateTransformMatrix() {
     let result = mat4.create();
     let rotationQuat = quat.create();
 
-    // // Axe Y
-    // quat.setAxisAngle(rotationQuat, [0, 1, 0], -rotationAngle);
+    // Axe Y
+    quat.setAxisAngle(rotationQuat, [0, 1, 0], -rotationAngle);
 
-    // Axe Z
-    quat.setAxisAngle(rotationQuat, [0, 0, 1], -rotationAngle);
+    // // Axe Z
+    // quat.setAxisAngle(rotationQuat, [0, 0, 1], -rotationAngle);
 
     let translationVec = vec3.fromValues(translationValues.x, translationValues.y, translationValues.z);
     let scaleVec = vec3.fromValues(scaleFactor, scaleFactor, scaleFactor);
@@ -342,6 +352,81 @@ function setTriansquare() {
     refreshBuffers();
 }
 
+function setCube() {
+    mousePositions.push(...[
+        // Front face
+        -1.0, -1.0,  1.0,
+        1.0,  1.0,  1.0,
+        1.0, -1.0,  1.0,
+
+        -1.0, -1.0,  1.0,
+        1.0,  1.0,  1.0,
+        -1.0,  1.0,  1.0,
+
+
+        // Back face
+        -1.0, -1.0, -1.0,
+        1.0,  1.0, -1.0,
+        -1.0,  1.0, -1.0,
+
+        -1.0, -1.0, -1.0,
+        1.0,  1.0, -1.0,
+        1.0, -1.0, -1.0,
+
+
+        // Top face
+        -1.0,  1.0, -1.0,
+        1.0,  1.0,  1.0,
+        -1.0,  1.0,  1.0,
+
+        -1.0,  1.0, -1.0,
+        1.0,  1.0,  1.0,
+        1.0,  1.0, -1.0,
+
+
+        // Bottom face
+        -1.0, -1.0, -1.0,
+        1.0, -1.0,  1.0,
+        1.0, -1.0, -1.0,
+
+        -1.0, -1.0, -1.0,
+        1.0, -1.0,  1.0,
+        -1.0, -1.0,  1.0,
+
+
+        // Right face
+        1.0, -1.0, -1.0,
+        1.0,  1.0,  1.0,
+        1.0,  1.0, -1.0,
+
+        1.0, -1.0, -1.0,
+        1.0,  1.0,  1.0,
+        1.0, -1.0,  1.0,
+
+
+        // Left face
+        -1.0, -1.0, -1.0,
+        -1.0,  1.0,  1.0,
+        -1.0, -1.0,  1.0,
+
+        -1.0, -1.0, -1.0,
+        -1.0,  1.0,  1.0,
+        -1.0,  1.0, -1.0
+    ]);
+
+    vertexColors.push(...([
+        Array(6).fill([1.0, 0.0, 0.0, 1.0]).flat(),
+        Array(6).fill([0.0, 1.0, 0.0, 1.0]).flat(),
+        Array(6).fill([0.0, 0.0, 1.0, 1.0]).flat(),
+        Array(6).fill([1.0, 1.0, 0.0, 1.0]).flat(),
+        Array(6).fill([0.0, 1.0, 1.0, 1.0]).flat(),
+        Array(6).fill([1.0, 0.0, 1.0, 1.0]).flat()
+    ].flat()));
+    console.log(vertexColors);
+
+    refreshBuffers();
+}
+
 
 function main() {
     initContext();
@@ -351,9 +436,10 @@ function main() {
     initBuffers();
     initEvents();
 
-    setTriangle();
+    // setTriangle();
     // setTriangrid();
     // setTriansquare();
+    setCube();
 
     draw();
     // autoDraw();
