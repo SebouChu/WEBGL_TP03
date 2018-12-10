@@ -24,7 +24,7 @@ var uniformPerspectiveMat;
 var mousePositions = [];
 var vertexColors = [];
 
-var translationValues = {x: 0, y: 0};
+var translationValues = {x: 0, y: 0, z: 0};
 var scaleFactor = 1.0;
 var rotationAngle = 0;
 
@@ -81,7 +81,7 @@ function initEvents() {
     canvas.onclick = function(e) {
         var x = e.offsetX / (canvas.width/2) - 1;
         var y = - (e.offsetY / (canvas.width/2) - 1);
-        mousePositions.push(...[x,y]);
+        mousePositions.push(...[x,y, (- Math.random() - 1)]);
         addRandomColors(1);
 
         refreshBuffers();
@@ -100,6 +100,12 @@ function initEvents() {
                 break;
             case "ArrowRight":
                 translationValues.x += 0.01;
+                break;
+            case "<":
+                translationValues.z -= 0.01;
+                break;
+            case ">":
+                translationValues.z += 0.01;
                 break;
             case "+":
                 scaleFactor += 0.05;
@@ -144,15 +150,16 @@ function initBuffers() {
 
     var posBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, 8, gl.STREAM_DRAW);
-    gl.vertexAttribPointer(attribPos, 2, gl.FLOAT, true, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, 9, gl.STREAM_DRAW);
+    gl.vertexAttribPointer(attribPos, 3, gl.FLOAT, true, 0, 0);
     gl.enableVertexAttribArray(attribPos);
     buffers["pos"] = posBuffer;
 }
 
 function initPerspective() {
     var perspectiveMat = mat4.create();
-    mat4.perspective(perspectiveMat, Math.PI/2, canvas.width/canvas.height, 0, 1000);
+    mat4.perspective(perspectiveMat, 90, canvas.width/canvas.height, 1, 1000);
+    console.table(perspectiveMat);
 
     gl.uniformMatrix4fv(uniformPerspectiveMat, false, perspectiveMat);
 }
@@ -182,7 +189,7 @@ function draw() {
     gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
 
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
+    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 3);
 }
 
 function autoDraw() {
@@ -208,7 +215,7 @@ function autoDraw() {
     gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
 
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
+    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 3);
     time += 1;
 }
 
@@ -257,7 +264,7 @@ function crazyAutoDraw() {
     gl.uniformMatrix4fv(uniformTransformMat, false, transformMat);
 
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 2);
+    gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 3);
     time += 1;
     time %= 900;
 }
@@ -265,10 +272,15 @@ function crazyAutoDraw() {
 function generateTransformMatrix() {
     let result = mat4.create();
     let rotationQuat = quat.create();
-    quat.setAxisAngle(rotationQuat, [0, 0, 1], -rotationAngle)
 
-    let translationVec = vec3.fromValues(translationValues.x, translationValues.y, 0);
-    let scaleVec = vec3.fromValues(scaleFactor, scaleFactor, 0);
+    // // Axe Y
+    // quat.setAxisAngle(rotationQuat, [0, 1, 0], -rotationAngle);
+
+    // Axe Z
+    quat.setAxisAngle(rotationQuat, [0, 0, 1], -rotationAngle);
+
+    let translationVec = vec3.fromValues(translationValues.x, translationValues.y, translationValues.z);
+    let scaleVec = vec3.fromValues(scaleFactor, scaleFactor, scaleFactor);
     if (!test) {
         console.log("Rotation")
         console.log(rotationQuat);
@@ -291,9 +303,9 @@ function addRandomColors(n) {
 }
 
 function setTriangle() {
-    mousePositions.push(...[-0.5, -1/3 * Math.sqrt(3/4)]);
-    mousePositions.push(...[0, 2/3 * Math.sqrt(3/4)]);
-    mousePositions.push(...[0.5, -1/3 * Math.sqrt(3/4)]);
+    mousePositions.push(...[-0.5, -1/3 * Math.sqrt(3/4), -1]);
+    mousePositions.push(...[0, 2/3 * Math.sqrt(3/4), -1]);
+    mousePositions.push(...[0.5, -1/3 * Math.sqrt(3/4), -1]);
 
     addRandomColors(3);
 
@@ -304,9 +316,9 @@ function setTriangrid() {
     let i, j;
     for (i = 1 ; i > -1 ; i -= 0.2) {
         for (j = -1 ; j < 1 ; j += 0.2) {
-            mousePositions.push(...[j, i]);
-            mousePositions.push(...[j + 0.1, i - 0.2]);
-            mousePositions.push(...[j + 0.2, i]);
+            mousePositions.push(...[j, i, -1]);
+            mousePositions.push(...[j + 0.1, i - 0.2, -1]);
+            mousePositions.push(...[j + 0.2, i, -1]);
 
             addRandomColors(3);
         }
@@ -320,10 +332,10 @@ function setTriansquare() {
 
     selectedPrimitive = gl.TRIANGLE_FAN;
 
-    mousePositions.push(...[0.5, 0.5]);
-    mousePositions.push(...[-0.5, 0.5]);
-    mousePositions.push(...[-0.5, -0.5]);
-    mousePositions.push(...[0.5, -0.5]);
+    mousePositions.push(...[0.5, 0.5, -1]);
+    mousePositions.push(...[-0.5, 0.5, -1]);
+    mousePositions.push(...[-0.5, -0.5, -1]);
+    mousePositions.push(...[0.5, -0.5, -1]);
 
     addRandomColors(4);
 
