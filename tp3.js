@@ -115,12 +115,12 @@ function initEvents() {
                 scaleFactor -= 0.05;
                 break;
             case "a":
-                rotationAngle -= Math.PI / 24;
-                rotationAngle %= 2 * Math.PI;
+                rotationAngle -= Math.PI / 48;
+                // rotationAngle %= 2 * Math.PI;
                 break;
             case "e":
-                rotationAngle += Math.PI / 24;
-                rotationAngle %= 2 * Math.PI;
+                rotationAngle += Math.PI / 48;
+                // rotationAngle %= 2 * Math.PI;
                 break;
             default:
                 // console.log(e.key);
@@ -198,7 +198,6 @@ function draw() {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
     gl.drawArrays(selectedPrimitive, 0, mousePositions.length / 3);
 }
 
@@ -283,11 +282,13 @@ function generateTransformMatrix() {
     let result = mat4.create();
     let rotationQuat = quat.create();
 
-    // Axe Y
-    quat.setAxisAngle(rotationQuat, [0, 1, 0], -rotationAngle);
-
-    // // Axe Z
+    // Axe Z
+    quat.rotateZ(rotationQuat, rotationQuat, -rotationAngle);
     // quat.setAxisAngle(rotationQuat, [0, 0, 1], -rotationAngle);
+
+    // Axe Y
+    quat.rotateY(rotationQuat, rotationQuat, -rotationAngle * 0.7);
+    // quat.setAxisAngle(rotationQuat, [0, 1, 0], -rotationAngle * 0.7);
 
     let translationVec = vec3.fromValues(translationValues.x, translationValues.y, translationValues.z);
     let scaleVec = vec3.fromValues(scaleFactor, scaleFactor, scaleFactor);
