@@ -18,7 +18,7 @@ var program; //shader program
 var buffers = {};
 var attribPos; //attribute position
 var attribSize; //attribute size
-var uniformColor; //uniform color
+var attribColor; //uniform color
 var pointSize = 20;
 var pointColor = [1.0, 1.0, 0.0];
 var pointsCoords = [];
